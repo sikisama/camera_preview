@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+   <head>
+    <title><%= title %></title>
+	  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <script>
+    var setting = {
+			data: {
+				key: {
+					channel:"channel",
+          ip:'ip',
+				},
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				onClick: zTreeOnClick
+			}
+		};
+    var str = '<%=data%>';
+    str = str.replace(/&#34;/g,'\'');
+		var zNodes = eval(str);
+    //选中节点
+    function zTreeOnClick(event ,treeId, treeNode) {
+      if(treeNode.pId)
+        clickLogin(treeNode);
+    }
+	  </script>
+	  <script type="text/javascript" src="/javascripts/jquery.js"></script>
+	  <script type="text/javascript" src="/javascripts/jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
+	  <script type="text/javascript" src="/javascripts/webVideoCtrl.js"></script>
+	  <script type="text/javascript" src="/javascripts/list.js"></script>
+	  <link rel="stylesheet" href="/stylesheets/zTreeStyle/zTreeStyle.css" type="text/css">
+    <link  href="/stylesheets/bootstrap.min.css" rel="stylesheet" type="text/css">
+   </head>
+   <body>
+		<div class="container">
+			<div class="row clearfix">
+				<div class="col-md-12 column">
+					<h3 class="text-center">
+						视频监控预览
+					</h3>
+					<div class="row clearfix">
+						<div class="col-md-4 column">
+							<ul id="treeDemo" class="ztree"></ul>
+						</div>
+						<div class="col-md-8 column">
+						<!--	<div class="btn-group">
+								<button class="btn" type="button" onclick='changewin(1);'><em class="icon-align-left" >1*1</em></button> <button class="btn" type="button" onclick='changewin(2);'><em class="icon-align-center">2*2</em></button> <button class="btn" type="button" onclick='changewin(3);'><em class="icon-align-right" >3*3</em></button>
+							</div>-->
+							<div id="divPlugin" class="plugin"></div>
+              <div id="footbar" style="height:31px;background-image:url(/images/toolbar.png); background-repeat:repeat-x">
+                  <img src="/images/ArrangeWnd.png" onmouseover="this.src = '/images/SelArrangeWnd.png'" onmouseout="this.src = '/images/ArrangeWnd.png'">
+              </div>
+              <div id="Wnd" style="display:none;width:80px;">
+                  <img onclick='changewin(1);' style="margin-right:-4px;" src="/images/Wnd1.png" onmouseover="this.src = '/images/SelWnd1.png'" onmouseout="this.src = '/images/Wnd1.png'">
+                  <img onclick='changewin(2);' style="margin-right:-4px;" src="/images/Wnd4.png" onmouseover="this.src = '/images/SelWnd4.png'" onmouseout="this.src = '/images/Wnd4.png'">
+                  <img onclick='changewin(3);' src="/images/Wnd9.png" onmouseover="this.src = '/images/SelWnd9.png'" onmouseout="this.src = '/images/Wnd9.png'">
+              </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+   </body>
+</html>
