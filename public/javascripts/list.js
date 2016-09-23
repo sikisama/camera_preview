@@ -1,10 +1,14 @@
 var g_iWndIndex =
     0; //可以不用设置这个变量，有窗口参数的接口中，不用传值，开发包会默认使用当前选择窗口
 var zTree;
+//记录正在播放的视频
+var camera_list;
 $(function() {
   //初始化树形控件
   $.fn.zTree.init($("#treeDemo"), setting, zNodes);
   zTree = $.fn.zTree.getZTreeObj("treeDemo");
+  //初始化视频列表
+  camera_list = new camera(zTree);
 
   // 检查插件是否已经安装过
   if (-1 == WebVideoCtrl.I_CheckPluginInstall()) {
@@ -46,17 +50,22 @@ $(function() {
       .mouseout(function(e) {
         if (e.pageY <= getElementTop(this) + this.offsetHeight) {
           $("#Wnd").hide();
-        } else {
         }
       });
 
   $("#Wnd")
       .mouseout(function(e) {
-        console.log(e.pageY + '--' + (getElementTop(this)));
+        // console.log(e.pageY + '--' + (getElementTop(this)));
         if (getElementTop(this) && e.pageY > getElementTop(this)) {
           $("#Wnd").hide();
         } else if (getElementTop(this) == 0) {
           $("#Wnd").show();
+        } else {
+          if (e.pageX < getElementLeft(this) + 40) {
+            $("#Wnd").show();
+          } else {
+            $("#Wnd").hide();
+          }
         }
       });
 });
@@ -118,24 +127,67 @@ function getChannelInfo(treeNode) {
 
 // 开始预览
 function clickStartRealPlay(treeNode) {
+  console.log('当前摄像头位置：' + g_iWndIndex);
   var oWndInfo = WebVideoCtrl.I_GetWindowStatus(g_iWndIndex),
       szIP = treeNode.ip, iStreamType = 1, iChannelID = treeNode.channel,
       szInfo = "";
   var iRet;
+  var winIndex;
   if ("" == szIP) {
     return;
   }
 
-  if (oWndInfo != null) { // 已经在播放了，停止预览
+  if (oWndInfo != null) { // 该位置已经在播放了
+
     iRet = WebVideoCtrl.I_Stop();
     if (0 == iRet) {
+      //删除该节点
+      camera_list.delByIndex(g_iWndIndex);
       szInfo = "停止预览成功！";
-      treeNode.icon = './images/Camera_1.png';
     } else {
       szInfo = "停止预览失败！";
     }
 
-  } else { //开始预览
+    //选中的 treenode节点的摄像头 正在预览，需要停止预览
+    if (winIndex = camera_list.exist(treeNode)) {
+      iRet = WebVideoCtrl.I_Stop(parseInt(winIndex));
+      console.log('原摄像头位置' + winIndex);
+      if (0 == iRet) {
+        //删除该节点
+        camera_list.del(treeNode);
+        console.log("原摄像头止预览成功！");
+      } else {
+        console.log("原摄像头停止预览失败！");
+      }
+    }
+
+    if (!(oWndInfo.szIP == szIP &&
+          oWndInfo.iChannelID == iChannelID)) { //预览其他摄像头
+      iRet = WebVideoCtrl.I_StartRealPlay(szIP, {
+        iStreamType : iStreamType,
+        iChannelID : iChannelID,
+        bZeroChannel : false
+      });
+      if (0 == iRet) {
+        //新增节点
+        camera_list.add(treeNode, g_iWndIndex);
+        console.log("新摄像头预览成功！");
+      } else {
+        console.log("新摄像头预览失败！");
+      }
+    }
+  } else {                                        //该位置未播放
+    if (winIndex = camera_list.exist(treeNode)) { //摄像头已播放,停止该摄像头
+      iRet = WebVideoCtrl.I_Stop(parseInt(winIndex));
+      console.log('原摄像头位置' + winIndex);
+      if (0 == iRet) {
+        //删除该节点
+        camera_list.del(treeNode);
+        console.log("原摄像头止预览成功！");
+      } else {
+        console.log("原摄像头停止预览失败！");
+      }
+    }
     iRet = WebVideoCtrl.I_StartRealPlay(szIP, {
       iStreamType : iStreamType,
       iChannelID : iChannelID,
@@ -143,23 +195,23 @@ function clickStartRealPlay(treeNode) {
     });
 
     if (0 == iRet) {
+      //新增节点
+      camera_list.add(treeNode, g_iWndIndex);
       szInfo = "开始预览成功！";
-      treeNode.icon = './images/Camera_2.png';
     } else {
       szInfo = "开始预览失败！";
     }
   }
-  if (treeNode.pId)
-    zTree.updateNode(treeNode);
-
   console.log(szIP + " " + szInfo);
 }
 
+//分屏
 function changewin(num) {
   console.log('屏幕切换为:' + num + '*' + num);
   $("embed")[0].HWP_ArrangeWindow(num);
 }
 
+//获取元素距离页面左上角距离
 function getElementTop(element) {
   　　　　var actualButtom = element.offsetTop;
   　　　　var current = element.offsetParent;
@@ -171,7 +223,7 @@ function getElementTop(element) {
   　　　　return actualButtom;
   　　
 }
-
+//获取元素距离页面左上角距离
 function getElementLeft(element) {
   　　　　var actualLeft = element.offsetLeft;
   　　　　var current = element.offsetParent;
